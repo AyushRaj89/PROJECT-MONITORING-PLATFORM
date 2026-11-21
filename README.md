@@ -1,4 +1,4 @@
-# Integrated Project Monitoring Platform (INT253 - Django)
+# Integrated Project Monitoring Platform
 
 One Django project (created with `django-admin startproject monitoring_platform`) with four apps
 created inside it using `python manage.py startapp`. Templates live inside each app, as in class.
@@ -54,24 +54,12 @@ pip install -r requirements.txt
 
 python manage.py migrate
 python manage.py setup_roles       # creates the role groups and permissions
-python manage.py seed_demo         # optional: adds demo users and projects
 python manage.py runserver
 ```
 
 Open http://127.0.0.1:8000/
 
 Run the tests with `python manage.py test`.
-
-### Demo accounts
-
-Created by `seed_demo`. These are for local testing only.
-
-| Username | Role | Password |
-|---|---|---|
-| `admin` | Admin | `admin12345` |
-| `manager1`, `manager2` | Project Manager | `demo12345` |
-| `member1`, `member2`, `member3` | Team Member | `demo12345` |
-| `viewer1` | Client Viewer | `demo12345` |
 
 ## Roles
 
@@ -153,7 +141,6 @@ Django admin: http://127.0.0.1:8000/admin/ (log in as `admin`).
 
 Pages live in each app's `templates/` folder and extend `monitoring/templates/base.html` (sidebar, top bar, flash toasts, icon sprite). Styling is one file, `monitoring/static/css/style.css`; behaviour is `monitoring/static/js/main.js` (no libraries): dashboard donut and bar charts, drag-and-drop task board on My tasks, mobile menu. The brand name "ProjectPulse" is a placeholder. Change it in `base.html`. The Manrope font loads from Google Fonts and falls back to the system font offline.
 
-## Roles (Unit V: groups and permissions)
 
 | Role | Can do |
 |---|---|
@@ -191,17 +178,6 @@ New sign-ups become Team Members. A project is visible only to its manager, its 
 - Every template gets `user`, `user_role`, `is_manager`, `is_viewer` and `messages` automatically.
 - Add/edit pages receive a Django `form`; render fields and `field.errors` yourself or with `form.as_p`.
 - Error pages `errors/400, 403, 404, 500.html` are used only when `DJANGO_DEBUG=False`.
-
-## Where each syllabus unit is in the code
-
-| Unit | Where |
-|---|---|
-| I - project, apps, manage.py | project layout, `settings.py`, `INSTALLED_APPS` |
-| II - views, URL params, regex, HTTP methods, errors | every `views.py`/`urls.py`; `re_path` in `monitoring/urls.py`; `require_POST`; `monitoring_platform/views.py` (handler400/403/404/500) |
-| III - templates, debugging, testing | `<app>/templates`, `DEBUG` and `LOGGING` in settings, `tests.py` in each app |
-| IV - forms, GET/POST, CSRF, validation, POST redirect | each `forms.py` (`clean_<field>`, `clean`), GET filter forms, `redirect()` after POST |
-| V - models, migrations, ORM, FKs, admin, groups, permissions, DB config | each `models.py`/`admin.py`, `accounts/roles.py`, `setup_roles` command, `DATABASES` |
-| VI - cookies, sessions, users, login/logout, login in views | `set_view_mode` (cookie), `recent_projects` (session), `accounts/`, `@login_required`, `@permission_required` |
 
 ## Database
 
