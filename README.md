@@ -5,7 +5,113 @@ created inside it using `python manage.py startapp`. Templates live inside each 
 
 The **Python code is complete**. The **HTML/CSS/JS** is yours: every template file already exists and
 starts with a comment listing the context variables and URL names it can use.
+# ProjectPulse: Integrated Project Monitoring Platform
 
+A web-based project monitoring platform built with **Django** for the course *INT253: Web Development in Python using Django*. Teams can plan projects, assign tasks, track milestones, report issues, post progress updates and see how every project is doing on one dashboard.
+
+## Features
+
+- **Dashboard** with active projects, overdue tasks, open issues, a task-status bar, a projects-by-status donut chart, upcoming milestones and latest updates
+- **Projects** in card or table view, with search and filters, health status (on track, at risk, off track), budget tracking and a progress bar
+- **Tasks** with priority, assignee, due date, comments and filters, plus a **drag-and-drop board** on "My tasks"
+- **Milestones, progress updates and issues** for each project
+- **Yearly report** of tasks completed per month, and **CSV export** of a project's tasks
+- **Role-based access**: Admin, Project Manager, Team Member and Client Viewer
+- Custom error pages (400, 403, 404, 500), flash messages, and a responsive layout that works on phones
+
+## Tech stack
+
+- Python 3 and Django 5
+- SQLite by default (PostgreSQL supported through environment variables)
+- Plain HTML templates, CSS and JavaScript, with no frontend framework
+
+## Project structure
+
+```
+monitoring_platform/
+├── manage.py
+├── requirements.txt
+├── monitoring_platform/   settings, root urls, error handlers, context processor
+├── accounts/              register, login/logout, profile, roles, user management
+├── projects/              projects, team members, milestones
+├── tasks/                 tasks, comments, filters, "my tasks" board
+└── monitoring/            dashboard, progress updates, issues, reports
+    ├── templates/base.html    shared layout (sidebar, top bar, messages)
+    └── static/                css/style.css, js/main.js
+```
+
+Each app keeps its own templates in `<app>/templates/<app>/`.
+
+## Getting started
+
+```bash
+git clone <your-repo-url>
+cd monitoring_platform
+
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+
+python manage.py migrate
+python manage.py setup_roles       # creates the role groups and permissions
+python manage.py seed_demo         # optional: adds demo users and projects
+python manage.py runserver
+```
+
+Open http://127.0.0.1:8000/
+
+Run the tests with `python manage.py test`.
+
+### Demo accounts
+
+Created by `seed_demo`. These are for local testing only.
+
+| Username | Role | Password |
+|---|---|---|
+| `admin` | Admin | `admin12345` |
+| `manager1`, `manager2` | Project Manager | `demo12345` |
+| `member1`, `member2`, `member3` | Team Member | `demo12345` |
+| `viewer1` | Client Viewer | `demo12345` |
+
+## Roles
+
+| Role | Can do |
+|---|---|
+| Admin | Everything, including changing user roles at `/accounts/users/` |
+| Project Manager | Create projects and manage their own (members, milestones, tasks) |
+| Team Member | Work in projects they belong to: tasks, comments, updates, issues |
+| Client Viewer | Read-only access to projects they belong to |
+
+New sign-ups become Team Members. A project is visible only to its manager, its members and admins.
+
+## Configuration
+
+Settings are read from environment variables. The defaults suit local development.
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | Django secret key. Set your own value when deploying. | development placeholder |
+| `DJANGO_DEBUG` | Set to `False` in production | `True` |
+| `DJANGO_ALLOWED_HOSTS` | Comma-separated host names | `localhost,127.0.0.1` |
+| `DB_ENGINE` | `sqlite` or `postgres` | `sqlite` |
+| `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT` | PostgreSQL connection (needs `psycopg[binary]`) | |
+
+Never commit a `.env` file or real credentials.
+
+## Django concepts covered
+
+| Unit | Where to look |
+|---|---|
+| I: project, apps, `manage.py` | project layout, `settings.py`, `INSTALLED_APPS` |
+| II: views, URL parameters, regex URLs, HTTP methods, error handling | each `views.py` and `urls.py`; `re_path` in `monitoring/urls.py`; `monitoring_platform/views.py` |
+| III: templates, debugging, testing | `<app>/templates`, `base.html`, `tests.py` in each app |
+| IV: forms, GET/POST, CSRF, validation, POST-redirect-GET | each `forms.py`, `clean_<field>` methods |
+| V: models, migrations, ORM, admin, groups and permissions | each `models.py` and `admin.py`, `setup_roles` command |
+| VI: cookies, sessions, authentication | `recent_projects` (session), `view_mode` (cookie), `@login_required`, `@permission_required` |
+
+## Author
+
+Ayush, INT253, Web Development in Python using Django.
 ```
 monitoring_platform/                 <- project root (open this folder in VS Code)
 ├── manage.py
