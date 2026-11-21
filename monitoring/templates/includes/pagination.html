@@ -1,0 +1,10 @@
+{% comment %}Usage: include with page_obj and querystring (filters to keep in the links).{% endcomment %}
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="pager" aria-label="Pagination">
+  <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  <span class="actions">
+    {% if page_obj.has_previous %}<a class="btn btn--sm" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}"><svg class="ic ic--sm"><use href="#i-left"/></svg>Previous</a>{% endif %}
+    {% if page_obj.has_next %}<a class="btn btn--sm" href="?page={{ page_obj.next_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}">Next<svg class="ic ic--sm"><use href="#i-right"/></svg></a>{% endif %}
+  </span>
+</nav>
+{% endif %}

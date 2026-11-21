@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Bad request{% endblock %}
+{% block content %}
+<div class="error-page">
+  <div class="big">400</div>
+  <h1>We couldn't process that request</h1>
+  <p>Something in the request was missing or not valid. Go back, check what you entered and try again.</p>
+  <div class="actions"><a class="btn btn--primary" href="{% if user.is_authenticated %}{% url 'monitoring:dashboard' %}{% else %}{% url 'accounts:login' %}{% endif %}">{% if user.is_authenticated %}Go to dashboard{% else %}Go to log in{% endif %}</a></div>
+</div>
+{% endblock %}

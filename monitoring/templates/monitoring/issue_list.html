@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Issues{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div><h1>Issues</h1><p>{{ page_obj.paginator.count }} issue{{ page_obj.paginator.count|pluralize }} across your projects.</p></div>
+  <div class="actions">
+    {% if form.cleaned_data.project and perms.monitoring.add_issue %}
+    <a class="btn btn--primary" href="{% url 'monitoring:issue_create' form.cleaned_data.project.pk %}"><svg class="ic ic--sm"><use href="#i-plus"/></svg>Report issue in {{ form.cleaned_data.project.code }}</a>
+    {% endif %}
+  </div>
+</header>
+
+<form class="card filters" method="get">
+  <div class="search">
+    <svg class="ic"><use href="#i-search"/></svg>
+    <input type="search" name="q" value="{{ form.q.value|default:'' }}" placeholder="Search issues" aria-label="Search issues">
+  </div>
+  {{ form.project }}{{ form.severity }}{{ form.status }}
+  <button class="btn" type="submit">Apply</button>
+  {% if request.GET %}<a class="btn btn--ghost" href="{% url 'monitoring:issue_list' %}">Clear</a>{% endif %}
+</form>
+
+<section class="card">
+  {% if issues %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Issue</th><th>Project</th><th>Severity</th><th>Status</th><th>Owner</th><th>Due</th><th></th></tr></thead>
+      <tbody>
+      {% for i in issues %}
+        <tr>
+          <td><span class="t-title">{{ i.title }}</span><br><small class="faint">Reported by {% if i.reported_by %}{{ i.reported_by.get_full_name|default:i.reported_by.username }}{% else %}a former user{% endif %}, {{ i.created_at|date:"j M" }}</small></td>
+          <td><a href="{{ i.project.get_absolute_url }}"><span class="code">{{ i.project.code }}</span></a></td>
+          <td><span class="badge b-{{ i.severity }}">{{ i.get_severity_display }}</span></td>
+          <td><span class="badge b-{{ i.status }}">{{ i.get_status_display }}</span></td>
+          <td>{% include "includes/person.html" with u=i.owner %}</td>
+          <td><span class="due">{{ i.due_date|date:"j M"|default:"-" }}</span></td>
+          <td class="tight">{% if perms.monitoring.change_issue %}{% if is_manager or i.reported_by_id == user.id or i.owner_id == user.id %}<a class="icon-btn" href="{% url 'monitoring:issue_update' i.pk %}" title="Edit issue" aria-label="Edit {{ i.title }}"><svg class="ic ic--sm"><use href="#i-edit"/></svg></a>{% endif %}{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "includes/pagination.html" %}
+  {% else %}
+  <div class="empty">
+    <h3>{% if request.GET %}No issues match these filters{% else %}No issues reported{% endif %}</h3>
+    <p>{% if request.GET %}Try a different search or clear the filters.{% else %}Open a project and choose Report issue when something blocks the work.{% endif %}</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

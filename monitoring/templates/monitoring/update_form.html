@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Post progress update{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="{% url 'projects:list' %}">Projects</a><a href="{{ project.get_absolute_url }}">{{ project.code }}</a><span>Progress update</span></nav>
+<header class="page-head"><div><h1>Post a progress update</h1><p>Tell stakeholders how {{ project.name }} is going. Choosing a health value also changes the project's health.</p></div></header>
+<form class="card narrow--sm" method="post" novalidate>
+  <div class="card-body">
+    {% csrf_token %}
+    {% include "includes/form_fields.html" with layout="form-stack" %}
+    <div class="form-actions">
+      <button class="btn btn--primary" type="submit">Post update</button>
+      <a class="btn btn--ghost" href="{{ project.get_absolute_url }}">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

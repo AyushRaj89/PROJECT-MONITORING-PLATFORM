@@ -1,0 +1,18 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Server error - ProjectPulse</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="error-bare">
+  {# Standalone on purpose: no base.html, so it still renders when the app itself is broken. #}
+  <div class="error-page">
+    <div class="big">500</div>
+    <h1>Something went wrong on our side</h1>
+    <p>The page couldn't be loaded. Wait a moment and refresh, and if it keeps happening tell your administrator.</p>
+    <div class="actions"><a class="btn btn--primary" href="/">Try again</a></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Projects{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <h1>Projects</h1>
+    <p>{{ page_obj.paginator.count }} project{{ page_obj.paginator.count|pluralize }} you can see.</p>
+  </div>
+  <div class="actions">
+    <form method="post" action="{% url 'projects:set_view_mode' %}" class="view-toggle" aria-label="Layout">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button type="submit" name="mode" value="card" aria-pressed="{% if view_mode != 'table' %}true{% else %}false{% endif %}" title="Card view"><svg class="ic ic--sm"><use href="#i-dashboard"/></svg><span class="sr-only">Card view</span></button>
+      <button type="submit" name="mode" value="table" aria-pressed="{% if view_mode == 'table' %}true{% else %}false{% endif %}" title="Table view"><svg class="ic ic--sm"><use href="#i-list"/></svg><span class="sr-only">Table view</span></button>
+    </form>
+    {% if is_manager %}<a class="btn btn--primary" href="{% url 'projects:create' %}"><svg class="ic ic--sm"><use href="#i-plus"/></svg>New project</a>{% endif %}
+  </div>
+</header>
+
+{% if recent_projects %}
+<div class="recent">
+  <span>Recently opened</span>
+  {% for p in recent_projects %}<a class="chip" href="{{ p.get_absolute_url }}"><span class="code">{{ p.code }}</span>{{ p.name }}</a>{% endfor %}
+</div>
+{% endif %}
+
+<form class="card filters" method="get">
+  <div class="search">
+    <svg class="ic"><use href="#i-search"/></svg>
+    <input type="search" name="q" value="{{ form.q.value|default:'' }}" placeholder="Search by name, code or client" aria-label="Search projects">
+  </div>
+  {{ form.status }}{{ form.health }}{{ form.sort }}
+  <button class="btn" type="submit">Apply</button>
+  {% if request.GET %}<a class="btn btn--ghost" href="{% url 'projects:list' %}">Clear</a>{% endif %}
+</form>
+
+{% if projects %}
+  {% if view_mode == 'table' %}
+  <section class="card">
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Project</th><th>Manager</th><th>Status</th><th>Health</th><th style="min-width:150px">Progress</th><th>Deadline</th><th class="num">Budget used</th></tr></thead>
+        <tbody>
+        {% for p in projects %}
+          <tr>
+            <td><a class="t-title" href="{{ p.get_absolute_url }}">{{ p.name }}</a><br><span class="code">{{ p.code }}</span>{% if p.client_name %} <span class="faint">for {{ p.client_name }}</span>{% endif %}</td>
+            <td>{% include "includes/person.html" with u=p.manager %}</td>
+            <td><span class="badge b-{{ p.status }}">{{ p.get_status_display }}</span></td>
+            <td><span class="badge b-{{ p.health }}">{{ p.get_health_display }}</span></td>
+            <td><div class="bar bar--green" style="--p: {{ p.progress }}"><i></i></div><small class="muted">{{ p.progress }}% of tasks done</small></td>
+            <td><span class="due{% if p.is_overdue %} is-late{% endif %}">{{ p.end_date|date:"j M Y"|default:"Not set" }}</span></td>
+            <td class="num">{{ p.budget_used_percent|floatformat:0 }}%</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "includes/pagination.html" %}
+  </section>
+  {% else %}
+  <div class="project-grid">
+    {% for p in projects %}
+    <a class="card pcard h-{{ p.health }}" href="{{ p.get_absolute_url }}">
+      <div class="top">
+        <div><span class="code">{{ p.code }}</span><h3>{{ p.name }}</h3>{% if p.client_name %}<p class="faint">{{ p.client_name }}</p>{% endif %}</div>
+        <span class="badge b-{{ p.status }}">{{ p.get_status_display }}</span>
+      </div>
+      <div class="prog">
+        <div><span>Tasks done</span><span>{{ p.progress }}%</span></div>
+        <div class="bar bar--green" style="--p: {{ p.progress }}"><i></i></div>
+      </div>
+      <div class="meta">
+        {% include "includes/person.html" with u=p.manager %}
+        <span class="due{% if p.is_overdue %} is-late{% endif %}">{% if p.is_overdue %}Overdue since {% else %}Due {% endif %}{{ p.end_date|date:"j M Y"|default:"date not set" }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% if page_obj.paginator.num_pages > 1 %}<div class="card" style="margin-top:18px">{% include "includes/pagination.html" %}</div>{% endif %}
+  {% endif %}
+{% else %}
+  <section class="card">
+    <div class="empty">
+      <h3>{% if request.GET.q or request.GET.status or request.GET.health %}No projects match these filters{% else %}No projects yet{% endif %}</h3>
+      <p>{% if request.GET.q or request.GET.status or request.GET.health %}Try a different search or clear the filters.{% elif is_manager %}Create your first project to start tracking work.{% else %}You will see projects here once a manager adds you to one.{% endif %}</p>
+      {% if is_manager and not request.GET %}<a class="btn btn--primary" href="{% url 'projects:create' %}">Create a project</a>{% endif %}
+    </div>
+  </section>
+{% endif %}
+{% endblock %}

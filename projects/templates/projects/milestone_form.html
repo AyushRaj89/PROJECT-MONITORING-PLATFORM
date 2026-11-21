@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Edit milestone{% else %}New milestone{% endif %}{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="{% url 'projects:list' %}">Projects</a><a href="{{ project.get_absolute_url }}">{{ project.code }}</a><span>{% if is_edit %}Edit milestone{% else %}New milestone{% endif %}</span></nav>
+<header class="page-head"><div><h1>{% if is_edit %}Edit milestone{% else %}New milestone{% endif %}</h1><p>A milestone marks a key date, such as a release or a client sign-off.</p></div></header>
+<form class="card narrow--sm" method="post" novalidate>
+  <div class="card-body">
+    {% csrf_token %}
+    {% include "includes/form_fields.html" with layout="form-stack" %}
+    <div class="form-actions">
+      <button class="btn btn--primary" type="submit">{% if is_edit %}Save changes{% else %}Add milestone{% endif %}</button>
+      <a class="btn btn--ghost" href="{{ project.get_absolute_url }}">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

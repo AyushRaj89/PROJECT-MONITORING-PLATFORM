@@ -1,0 +1,16 @@
+{% comment %}
+Renders every field of a Django form with label, hint and error text.
+Usage: include with form=<form> and optional layout="form-stack" (single column; default is two columns).
+{% endcomment %}
+{% if form.non_field_errors %}<div class="notice notice--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+<div class="{{ layout|default:'form-grid' }}">
+  {% for field in form.visible_fields %}
+  <div class="field{% if field.errors %} has-error{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="req" aria-hidden="true">*</span>{% endif %}</label>
+    {{ field }}
+    {% if field.help_text %}<div class="hint">{{ field.help_text|safe }}</div>{% endif %}
+    {% for e in field.errors %}<p class="err">{{ e }}</p>{% endfor %}
+  </div>
+  {% endfor %}
+</div>

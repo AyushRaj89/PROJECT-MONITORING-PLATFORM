@@ -1,0 +1,1 @@
+{% comment %}Avatar with name. Usage: include with u=<user>. Shows "Unassigned" when u is empty.{% endcomment %}{% if u %}<span class="person">{% include "includes/avatar.html" with u=u size="sm" %}<span>{{ u.get_full_name|default:u.username }}</span></span>{% else %}<span class="faint">Unassigned</span>{% endif %}

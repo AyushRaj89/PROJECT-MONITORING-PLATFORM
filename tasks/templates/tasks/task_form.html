@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Edit task{% else %}New task{% endif %}{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="{% url 'tasks:list' %}">Tasks</a><a href="{{ project.get_absolute_url }}">{{ project.code }}</a><span>{% if is_edit %}Edit task{% else %}New task{% endif %}</span></nav>
+<header class="page-head"><div><h1>{% if is_edit %}Edit task{% else %}New task in {{ project.name }}{% endif %}</h1>
+<p>{% if is_edit %}Update the details, assignee or due date.{% else %}Only people on this project can be assigned.{% endif %}</p></div></header>
+<form class="card narrow" method="post" novalidate>
+  <div class="card-body">
+    {% csrf_token %}
+    {% include "includes/form_fields.html" %}
+    <div class="form-actions">
+      <button class="btn btn--primary" type="submit">{% if is_edit %}Save changes{% else %}Create task{% endif %}</button>
+      <a class="btn btn--ghost" href="{% if is_edit %}{{ task.get_absolute_url }}{% else %}{{ project.get_absolute_url }}{% endif %}">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

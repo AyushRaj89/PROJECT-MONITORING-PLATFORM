@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Create account{% endblock %}
+{% block body_class %}is-auth{% endblock %}
+{% block content %}
+<div class="auth">
+  <section class="auth-side" aria-hidden="true">
+    <a class="brand" href="{% url 'accounts:login' %}">
+      <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h4l3-7 4 12 3-5h4"/></svg></span>
+      ProjectPulse
+    </a>
+    <div>
+      <h2>Join your team's workspace.</h2>
+      <p>New accounts start as team members. A project manager can add you to projects, and an admin can change your role later.</p>
+    </div>
+    <div class="auth-preview">
+      <div class="row"><div>What you can do <small>as a team member</small></div></div>
+      <div class="row"><div>Update the tasks assigned to you</div></div>
+      <div class="row"><div>Post progress updates and comments</div></div>
+      <div class="row"><div>Report issues before they slow the project</div></div>
+    </div>
+  </section>
+
+  <section class="auth-main">
+    <div class="auth-card auth-card--wide">
+      <a class="brand auth-brand-mobile" href="{% url 'accounts:login' %}"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h4l3-7 4 12 3-5h4"/></svg></span>ProjectPulse</a>
+      <h1>Create your account</h1>
+      <p>It takes a minute. You can edit these details later.</p>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% include "includes/form_fields.html" %}
+        <div class="form-actions">
+          <button class="btn btn--primary" type="submit">Create account</button>
+          <a class="btn btn--ghost" href="{% url 'accounts:login' %}">I already have an account</a>
+        </div>
+      </form>
+    </div>
+  </section>
+</div>
+{% endblock %}

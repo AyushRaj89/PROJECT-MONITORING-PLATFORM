@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Report {{ year }}{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div><h1>Tasks completed in {{ year }}</h1><p>{{ total }} task{{ total|pluralize }} finished across your projects.</p></div>
+  <div class="actions">
+    <a class="btn" href="{% url 'monitoring:year_report' prev_year %}"><svg class="ic ic--sm"><use href="#i-left"/></svg>{{ prev_year }}</a>
+    <a class="btn" href="{% url 'monitoring:year_report' next_year %}">{{ next_year }}<svg class="ic ic--sm"><use href="#i-right"/></svg></a>
+  </div>
+</header>
+
+<section class="card">
+  <div class="card-head"><h2>Completed per month</h2></div>
+  <div class="card-body">
+    <div class="bars" data-bars role="img" aria-label="Tasks completed per month in {{ year }}">
+      {% for row in rows %}
+      <div class="col" data-v="{{ row.completed }}" data-m="{{ row.month }}">
+        <div class="track"><span class="val">{{ row.completed }}</span><div class="fill"></div></div>
+        <span class="lab">{{ row.month }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}My profile{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <h1>My profile</h1>
+    <p>Your details are shown to teammates on tasks, comments and updates.</p>
+  </div>
+</header>
+
+<div class="cols cols--main-side">
+  <form class="card" method="post" novalidate>
+    <div class="card-head"><h2>Account details</h2></div>
+    <div class="card-body">
+      {% csrf_token %}
+      {% if user_form.non_field_errors or profile_form.non_field_errors %}<div class="notice notice--error">{{ user_form.non_field_errors }}{{ profile_form.non_field_errors }}</div>{% endif %}
+      <div class="form-grid">
+        {% for field in user_form.visible_fields %}
+        <div class="field{% if field.errors %} has-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+          {% for e in field.errors %}<p class="err">{{ e }}</p>{% endfor %}
+        </div>
+        {% endfor %}
+        {% for field in profile_form.visible_fields %}
+        <div class="field{% if field.errors %} has-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+          {% for e in field.errors %}<p class="err">{{ e }}</p>{% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="form-actions"><button class="btn btn--primary" type="submit">Save changes</button></div>
+    </div>
+  </form>
+
+  <div class="stack">
+    <section class="card">
+      <div class="card-body" style="display:flex;gap:16px;align-items:center">
+        {% include "includes/avatar.html" with u=user size="lg" %}
+        <div>
+          <h2>{{ user.get_full_name|default:user.username }}</h2>
+          <p class="muted">@{{ user.username }}</p>
+          <p style="margin-top:6px"><span class="badge b-in_progress">{{ role|default:"No role yet" }}</span></p>
+        </div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>Security</h2></div>
+      <div class="card-body">
+        <p class="muted" style="margin-bottom:14px">Change your password regularly and never share it.</p>
+        <a class="btn" href="{% url 'accounts:password_change' %}">Change password</a>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

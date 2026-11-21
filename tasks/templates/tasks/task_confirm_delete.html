@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Delete task{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="{% url 'tasks:list' %}">Tasks</a><a href="{{ task.get_absolute_url }}">#{{ task.pk }}</a><span>Delete</span></nav>
+<form class="card narrow--sm" method="post">
+  <div class="card-body confirm">
+    {% csrf_token %}
+    <span class="ic-wrap"><svg class="ic"><use href="#i-trash"/></svg></span>
+    <h1 style="font-size:20px">Delete "{{ task.title }}"?</h1>
+    <p class="muted">The task and its comments will be removed for everyone on the project. You can't undo this.</p>
+    <div class="actions">
+      <button class="btn btn--danger" type="submit">Delete task</button>
+      <a class="btn btn--ghost" href="{{ task.get_absolute_url }}">Keep task</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

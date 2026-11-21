@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="{% url 'projects:list' %}">Projects</a><span>{{ project.code }}</span></nav>
+
+<header class="page-head">
+  <div>
+    <div class="title-row">
+      <h1>{{ project.name }}</h1>
+      <span class="badge b-{{ project.status }}">{{ project.get_status_display }}</span>
+      <span class="badge b-{{ project.health }}">{{ project.get_health_display }}</span>
+      {% if project.is_overdue %}<span class="badge b-red">Past deadline</span>{% endif %}
+    </div>
+    <p>{{ project.client_name|default:"Internal project" }}</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="{% url 'monitoring:tasks_csv' project.pk %}"><svg class="ic ic--sm"><use href="#i-download"/></svg>Export tasks</a>
+    {% if can_contribute %}
+      <a class="btn" href="{% url 'monitoring:update_create' project.pk %}"><svg class="ic ic--sm"><use href="#i-pulse"/></svg>Post update</a>
+      <a class="btn" href="{% url 'monitoring:issue_create' project.pk %}"><svg class="ic ic--sm"><use href="#i-alert"/></svg>Report issue</a>
+      <a class="btn btn--primary" href="{% url 'tasks:create' project.pk %}"><svg class="ic ic--sm"><use href="#i-plus"/></svg>New task</a>
+    {% endif %}
+    {% if can_manage %}
+      <a class="icon-btn" href="{% url 'projects:update' project.pk %}" title="Edit project" aria-label="Edit project"><svg class="ic"><use href="#i-edit"/></svg></a>
+      <a class="icon-btn icon-btn--danger" href="{% url 'projects:delete' project.pk %}" title="Delete project" aria-label="Delete project"><svg class="ic"><use href="#i-trash"/></svg></a>
+    {% endif %}
+  </div>
+</header>
+
+<div class="cols cols--main-side">
+  <div class="stack">
+    <section class="card">
+      <div class="card-head"><h2>Progress</h2></div>
+      <div class="card-body">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px">
+          <span class="pct">{{ project.progress }}%</span><span class="muted">of tasks are done</span>
+        </div>
+        <div class="segbar" role="img" aria-label="Tasks by status">
+          {% for key, n in task_counts.items %}<i class="seg-{{ key }}" style="flex: {{ n }}"></i>{% endfor %}
+        </div>
+        <ul class="legend">
+          <li style="--sw:var(--c-done)">Done <b>{{ task_counts.done }}</b></li>
+          <li style="--sw:var(--c-review)">In review <b>{{ task_counts.review }}</b></li>
+          <li style="--sw:var(--c-in_progress)">In progress <b>{{ task_counts.in_progress }}</b></li>
+          <li style="--sw:var(--c-blocked)">Blocked <b>{{ task_counts.blocked }}</b></li>
+          <li style="--sw:var(--c-todo)">To do <b>{{ task_counts.todo }}</b></li>
+        </ul>
+        {% if project.description %}<p class="muted" style="margin-top:18px;max-width:70ch">{{ project.description }}</p>{% endif %}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Latest tasks</h2>
+        <a class="btn btn--sm btn--ghost" href="{% url 'tasks:list' %}?project={{ project.pk }}">View all</a>
+      </div>
+      {% if tasks %}
+      <div class="table-wrap card-body--flush">
+        <table class="table">
+          <thead><tr><th>Task</th><th>Assignee</th><th>Priority</th><th>Status</th><th>Due</th></tr></thead>
+          <tbody>
+          {% for t in tasks %}
+            <tr>
+              <td><a class="t-title" href="{{ t.get_absolute_url }}">{{ t.title }}</a></td>
+              <td>{% include "includes/person.html" with u=t.assignee %}</td>
+              <td><span class="badge b-{{ t.priority }}">{{ t.get_priority_display }}</span></td>
+              <td><span class="badge b-{{ t.status }}">{{ t.get_status_display }}</span></td>
+              <td><span class="due{% if t.is_overdue %} is-late{% endif %}">{{ t.due_date|date:"j M"|default:"-" }}</span></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty"><h3>No tasks yet</h3><p>Break the work into tasks and assign them to your team.</p>{% if can_contribute %}<a class="btn btn--primary" href="{% url 'tasks:create' project.pk %}">Add the first task</a>{% endif %}</div>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Open issues</h2>{% if can_contribute %}<a class="btn btn--sm btn--ghost" href="{% url 'monitoring:issue_create' project.pk %}">Report issue</a>{% endif %}</div>
+      {% if open_issues %}
+      <ul class="list card-body--flush">
+        {% for i in open_issues %}
+        <li>
+          <div class="grow"><a class="t" href="{% url 'monitoring:issue_update' i.pk %}">{{ i.title }}</a><small>{% if i.owner %}Owner: {{ i.owner.get_full_name|default:i.owner.username }}{% else %}No owner yet{% endif %}</small></div>
+          <span class="badge b-{{ i.severity }}">{{ i.get_severity_display }}</span>
+          <span class="badge b-{{ i.status }}">{{ i.get_status_display }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="empty-inline">No open issues. Nice work.</p>{% endif %}
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Progress updates</h2>{% if can_contribute %}<a class="btn btn--sm btn--ghost" href="{% url 'monitoring:update_create' project.pk %}">Post update</a>{% endif %}</div>
+      <div class="card-body">
+        {% if updates %}
+        <ul class="timeline">
+          {% for u in updates %}
+          <li class="update ms-{% if u.health == 'red' %}missed{% elif u.health == 'green' %}achieved{% else %}in_progress{% endif %}">
+            <div class="head">
+              <b>{% if u.author %}{{ u.author.get_full_name|default:u.author.username }}{% else %}Someone{% endif %}</b>
+              <small>{{ u.created_at|naturaltime }}</small>
+              <span class="badge b-in_progress">{{ u.percent_complete }}% complete</span>
+              {% if u.health %}<span class="badge b-{{ u.health }}">{{ u.get_health_display }}</span>{% endif %}
+            </div>
+            <p>{{ u.summary }}</p>
+            {% if u.blockers %}<div class="blockers"><b>Blockers:</b> {{ u.blockers }}</div>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}<p class="faint">No updates yet. Post one so everyone knows where things stand.</p>{% endif %}
+      </div>
+    </section>
+  </div>
+
+  <aside class="stack">
+    <section class="card">
+      <div class="card-head"><h2>Details</h2></div>
+      <div class="card-body">
+        <dl class="kv">
+          <dt>Manager</dt><dd>{% include "includes/person.html" with u=project.manager %}</dd>
+          <dt>Client</dt><dd>{{ project.client_name|default:"-" }}</dd>
+          <dt>Start</dt><dd>{{ project.start_date|date:"j M Y"|default:"Not set" }}</dd>
+          <dt>Deadline</dt><dd class="due{% if project.is_overdue %} is-late{% endif %}">{{ project.end_date|date:"j M Y"|default:"Not set" }}</dd>
+        </dl>
+        <div style="margin-top:20px">
+          <div style="display:flex;justify-content:space-between;font-weight:600;margin-bottom:8px"><span>Budget used</span><span>{{ project.budget_used_percent|floatformat:0 }}%</span></div>
+          <div class="bar{% if project.budget_used_percent > 100 %} bar--over{% endif %}" style="--p: {{ project.budget_used_percent|stringformat:'.0f' }}"><i></i></div>
+          <p class="faint" style="margin-top:8px">&#8377;{{ project.actual_cost|floatformat:0|intcomma }} spent of &#8377;{{ project.budget|floatformat:0|intcomma }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Team</h2>{% if can_manage %}<a class="btn btn--sm btn--ghost" href="{% url 'projects:member_add' project.pk %}"><svg class="ic ic--sm"><use href="#i-plus"/></svg>Add</a>{% endif %}</div>
+      <ul class="list card-body--flush">
+        <li>{% include "includes/avatar.html" with u=project.manager %}<div class="grow"><b>{{ project.manager.get_full_name|default:project.manager.username }}</b><small>Project manager</small></div></li>
+        {% for m in members %}
+        <li>
+          {% include "includes/avatar.html" with u=m.user %}
+          <div class="grow"><b>{{ m.user.get_full_name|default:m.user.username }}</b><small>{{ m.role_in_project|default:"Team member" }}</small></div>
+          {% if can_manage %}
+          <form method="post" action="{% url 'projects:member_remove' project.pk m.pk %}" data-confirm="Remove {{ m.user.username }} from this project?">
+            {% csrf_token %}<button class="icon-btn icon-btn--danger" type="submit" title="Remove from project" aria-label="Remove {{ m.user.username }}"><svg class="ic ic--sm"><use href="#i-x"/></svg></button>
+          </form>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Milestones</h2>{% if can_manage %}<a class="btn btn--sm btn--ghost" href="{% url 'projects:milestone_create' project.pk %}"><svg class="ic ic--sm"><use href="#i-plus"/></svg>Add</a>{% endif %}</div>
+      <div class="card-body">
+        {% if milestones %}
+        <ul class="timeline">
+          {% for m in milestones %}
+          <li class="ms-{{ m.status }}">
+            <div class="row"><b>{{ m.title }}</b>
+              {% if can_manage %}<span class="actions" style="gap:0">
+                <a class="icon-btn" href="{% url 'projects:milestone_update' m.pk %}" title="Edit" aria-label="Edit {{ m.title }}"><svg class="ic ic--sm"><use href="#i-edit"/></svg></a>
+                <a class="icon-btn icon-btn--danger" href="{% url 'projects:milestone_delete' m.pk %}" title="Delete" aria-label="Delete {{ m.title }}"><svg class="ic ic--sm"><use href="#i-trash"/></svg></a>
+              </span>{% endif %}
+            </div>
+            <small>Due {{ m.due_date|date:"j M Y" }}{% if m.completed_at %}, finished {{ m.completed_at|date:"j M" }}{% endif %}</small>
+            <span><span class="badge b-{{ m.status }}">{{ m.get_status_display }}</span></span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}<p class="faint">No milestones yet.</p>{% endif %}
+      </div>
+    </section>
+  </aside>
+</div>
+{% endblock %}

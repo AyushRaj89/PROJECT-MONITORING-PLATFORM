@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <h1>Welcome back, {{ user.first_name|default:user.username }}</h1>
+    <p>{% now "l, j F Y" %}</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="{% url 'tasks:mine' %}"><svg class="ic ic--sm"><use href="#i-mine"/></svg>My tasks</a>
+    {% if is_manager %}<a class="btn btn--primary" href="{% url 'projects:create' %}"><svg class="ic ic--sm"><use href="#i-plus"/></svg>New project</a>{% endif %}
+  </div>
+</header>
+
+<div class="stats">
+  <div class="card stat"><span class="stat-ic stat-ic--brand"><svg class="ic"><use href="#i-folder"/></svg></span>
+    <div><b>{{ summary.projects_by_status.active }}</b><span>Active projects</span><small>{{ summary.projects_total }} in total</small></div></div>
+  <div class="card stat"><span class="stat-ic stat-ic--green"><svg class="ic"><use href="#i-mine"/></svg></span>
+    <div><b>{{ summary.my_open_tasks }}</b><span>My open tasks</span><small>{{ summary.my_due_this_week }} due in the next 7 days</small></div></div>
+  <div class="card stat"><span class="stat-ic stat-ic--amber"><svg class="ic"><use href="#i-clock"/></svg></span>
+    <div><b>{{ summary.tasks_overdue }}</b><span>Overdue tasks</span><small>{{ summary.my_overdue_tasks }} assigned to me</small></div></div>
+  <div class="card stat"><span class="stat-ic stat-ic--red"><svg class="ic"><use href="#i-alert"/></svg></span>
+    <div><b>{{ summary.issues_open }}</b><span>Open issues</span><small>{{ summary.issues_critical }} critical</small></div></div>
+</div>
+
+<div class="cols cols--dash">
+  <div class="stack">
+    <section class="card">
+      <div class="card-head"><h2>Task status across projects</h2><a class="btn btn--sm btn--ghost" href="{% url 'tasks:list' %}">View tasks</a></div>
+      <div class="card-body">
+        {% if summary.tasks_total %}
+        <div class="segbar" role="img" aria-label="Tasks by status">
+          <i class="seg-done" style="flex: {{ summary.tasks_by_status.done }}"></i>
+          <i class="seg-review" style="flex: {{ summary.tasks_by_status.review }}"></i>
+          <i class="seg-in_progress" style="flex: {{ summary.tasks_by_status.in_progress }}"></i>
+          <i class="seg-blocked" style="flex: {{ summary.tasks_by_status.blocked }}"></i>
+          <i class="seg-todo" style="flex: {{ summary.tasks_by_status.todo }}"></i>
+        </div>
+        <ul class="legend">
+          <li style="--sw:var(--c-done)">Done <b>{{ summary.tasks_by_status.done }}</b></li>
+          <li style="--sw:var(--c-review)">In review <b>{{ summary.tasks_by_status.review }}</b></li>
+          <li style="--sw:var(--c-in_progress)">In progress <b>{{ summary.tasks_by_status.in_progress }}</b></li>
+          <li style="--sw:var(--c-blocked)">Blocked <b>{{ summary.tasks_by_status.blocked }}</b></li>
+          <li style="--sw:var(--c-todo)">To do <b>{{ summary.tasks_by_status.todo }}</b></li>
+        </ul>
+        {% else %}<p class="faint">No tasks yet.</p>{% endif %}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>My open tasks</h2><a class="btn btn--sm btn--ghost" href="{% url 'tasks:mine' %}">Open board</a></div>
+      {% if my_tasks %}
+      <ul class="list card-body--flush">
+        {% for t in my_tasks %}
+        <li>
+          <div class="grow"><a class="t" href="{{ t.get_absolute_url }}">{{ t.title }}</a><small>{{ t.project.name }}</small></div>
+          <span class="badge b-{{ t.status }}">{{ t.get_status_display }}</span>
+          <span class="due{% if t.is_overdue %} is-late{% endif %}">{{ t.due_date|date:"j M"|default:"No date" }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="empty-inline">Nothing assigned to you right now.</p>{% endif %}
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Recent projects</h2><a class="btn btn--sm btn--ghost" href="{% url 'projects:list' %}">All projects</a></div>
+      {% if recent_projects %}
+      <div class="table-wrap card-body--flush">
+        <table class="table">
+          <thead><tr><th>Project</th><th>Health</th><th style="min-width:140px">Progress</th><th>Deadline</th></tr></thead>
+          <tbody>
+          {% for p in recent_projects %}
+            <tr>
+              <td><a class="t-title" href="{{ p.get_absolute_url }}">{{ p.name }}</a><br><span class="code">{{ p.code }}</span></td>
+              <td><span class="badge b-{{ p.health }}">{{ p.get_health_display }}</span></td>
+              <td><div class="bar bar--green" style="--p: {{ p.progress }}"><i></i></div><small class="muted">{{ p.progress }}%</small></td>
+              <td><span class="due{% if p.is_overdue %} is-late{% endif %}">{{ p.end_date|date:"j M Y"|default:"-" }}</span></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}<p class="empty-inline">No projects yet.</p>{% endif %}
+    </section>
+  </div>
+
+  <aside class="stack">
+    <section class="card">
+      <div class="card-head"><h2>Projects by status</h2></div>
+      <div class="card-body">
+        <div class="donut-wrap">
+          <div data-donut-projects></div>
+          <ul class="donut-legend" aria-label="Legend"></ul>
+        </div>
+      </div>
+    </section>
+
+    {% if summary.overdue_projects %}
+    <section class="card">
+      <div class="card-head"><h2>Past deadline</h2></div>
+      <ul class="list card-body--flush">
+        {% for p in summary.overdue_projects %}
+        <li><div class="grow"><a class="t" href="{% url 'projects:detail' p.id %}">{{ p.name }}</a><small>{{ p.code }}</small></div><span class="due is-late">{{ p.end_date|date:"j M" }}</span></li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    <section class="card">
+      <div class="card-head"><h2>Upcoming milestones</h2></div>
+      {% if upcoming_milestones %}
+      <ul class="list card-body--flush">
+        {% for m in upcoming_milestones %}
+        <li><svg class="ic" style="color:var(--brand)"><use href="#i-flag"/></svg><div class="grow"><b>{{ m.title }}</b><small>{{ m.project.name }}</small></div><span class="due">{{ m.due_date|date:"j M" }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="empty-inline">No milestones coming up.</p>{% endif %}
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Latest updates</h2></div>
+      <div class="card-body">
+        {% if recent_updates %}
+        <ul class="timeline">
+          {% for u in recent_updates %}
+          <li class="update ms-in_progress">
+            <div class="head"><b>{{ u.project.code }}</b><small>{{ u.created_at|naturaltime }}</small><span class="badge b-in_progress">{{ u.percent_complete }}%</span></div>
+            <p>{{ u.summary|truncatechars:110 }}</p>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}<p class="faint">No updates posted yet.</p>{% endif %}
+      </div>
+    </section>
+  </aside>
+</div>
+
+{{ summary|json_script:"summary-data" }}
+{% endblock %}

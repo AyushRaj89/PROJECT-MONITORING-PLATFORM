@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Access denied{% endblock %}
+{% block content %}
+<div class="error-page">
+  <div class="big">403</div>
+  <h1>You don't have access to this</h1>
+  <p>{% if message %}{{ message }}{% else %}Your role doesn't allow this action.{% endif %} Ask a project manager or admin if you think you should have access.</p>
+  <div class="actions"><a class="btn btn--primary" href="{% if user.is_authenticated %}{% url 'monitoring:dashboard' %}{% else %}{% url 'accounts:login' %}{% endif %}">{% if user.is_authenticated %}Go to dashboard{% else %}Go to log in{% endif %}</a></div>
+</div>
+{% endblock %}

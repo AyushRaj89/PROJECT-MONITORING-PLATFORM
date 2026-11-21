@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Add team member{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="{% url 'projects:list' %}">Projects</a><a href="{{ project.get_absolute_url }}">{{ project.code }}</a><span>Add member</span></nav>
+<header class="page-head"><div><h1>Add a team member</h1><p>They will see {{ project.name }} and can be assigned tasks.</p></div></header>
+<form class="card narrow--sm" method="post" novalidate>
+  <div class="card-body">
+    {% csrf_token %}
+    {% include "includes/form_fields.html" with layout="form-stack" %}
+    <div class="form-actions">
+      <button class="btn btn--primary" type="submit">Add to project</button>
+      <a class="btn btn--ghost" href="{{ project.get_absolute_url }}">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

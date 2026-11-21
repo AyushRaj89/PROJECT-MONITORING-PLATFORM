@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}{{ task.title }}{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="{% url 'tasks:list' %}">Tasks</a><a href="{{ task.project.get_absolute_url }}">{{ task.project.code }}</a><span>#{{ task.pk }}</span></nav>
+
+<header class="page-head">
+  <div>
+    <div class="title-row">
+      <h1>{{ task.title }}</h1>
+      <span class="badge b-{{ task.status }}">{{ task.get_status_display }}</span>
+      <span class="badge b-{{ task.priority }}">{{ task.get_priority_display }} priority</span>
+      {% if task.is_overdue %}<span class="badge b-red">Overdue</span>{% endif %}
+    </div>
+    <p>In <a href="{{ task.project.get_absolute_url }}">{{ task.project.name }}</a>{% if task.milestone %}, milestone {{ task.milestone.title }}{% endif %}</p>
+  </div>
+  <div class="actions">
+    {% if can_edit %}<a class="btn" href="{% url 'tasks:update' task.pk %}"><svg class="ic ic--sm"><use href="#i-edit"/></svg>Edit</a>{% endif %}
+    {% if can_delete %}<a class="btn btn--ghost" href="{% url 'tasks:delete' task.pk %}"><svg class="ic ic--sm"><use href="#i-trash"/></svg>Delete</a>{% endif %}
+  </div>
+</header>
+
+<div class="cols cols--main-side">
+  <div class="stack">
+    <section class="card">
+      <div class="card-head"><h2>Description</h2></div>
+      <div class="card-body">{% if task.description %}<p style="white-space:pre-line;max-width:70ch">{{ task.description }}</p>{% else %}<p class="faint">No description added.</p>{% endif %}</div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Comments ({{ comments|length }})</h2></div>
+      {% if comments %}
+      <ul class="comments card-body--flush">
+        {% for c in comments %}
+        <li>
+          {% include "includes/avatar.html" with u=c.author %}
+          <div class="body"><b>{% if c.author %}{{ c.author.get_full_name|default:c.author.username }}{% else %}Former user{% endif %}</b> <small class="faint">{{ c.created_at|naturaltime }}</small><p>{{ c.body }}</p></div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="empty-inline">No comments yet.</p>{% endif %}
+      {% if can_comment %}
+      <form method="post" action="{% url 'tasks:comment_add' task.pk %}" class="card-body" style="border-top:1px solid var(--line-2)">
+        {% csrf_token %}
+        <div class="field"><label for="{{ comment_form.body.id_for_label }}">Add a comment</label>{{ comment_form.body }}</div>
+        <div class="form-actions" style="border:0;margin-top:12px;padding-top:0"><button class="btn btn--primary" type="submit"><svg class="ic ic--sm"><use href="#i-message"/></svg>Post comment</button></div>
+      </form>
+      {% endif %}
+    </section>
+  </div>
+
+  <aside class="stack">
+    <section class="card">
+      <div class="card-head"><h2>Details</h2></div>
+      <div class="card-body">
+        <dl class="kv">
+          <dt>Assignee</dt><dd>{% include "includes/person.html" with u=task.assignee %}</dd>
+          <dt>Created by</dt><dd>{% include "includes/person.html" with u=task.created_by %}</dd>
+          <dt>Due date</dt><dd class="due{% if task.is_overdue %} is-late{% endif %}">{{ task.due_date|date:"j M Y"|default:"Not set" }}</dd>
+          <dt>Estimate</dt><dd>{% if task.estimated_hours %}{{ task.estimated_hours|floatformat:"-1" }} hours{% else %}-{% endif %}</dd>
+          <dt>Created</dt><dd>{{ task.created_at|date:"j M Y" }}</dd>
+          {% if task.completed_at %}<dt>Completed</dt><dd>{{ task.completed_at|date:"j M Y" }}</dd>{% endif %}
+        </dl>
+      </div>
+    </section>
+    {% if can_edit %}
+    <section class="card">
+      <div class="card-head"><h2>Change status</h2></div>
+      <form class="card-body" method="post" action="{% url 'tasks:set_status' task.pk %}">
+        {% csrf_token %}
+        <label class="sr-only" for="{{ status_form.status.id_for_label }}">Status</label>
+        {{ status_form.status }}
+        <button class="btn btn--primary btn--block" type="submit" style="margin-top:12px">Update status</button>
+      </form>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

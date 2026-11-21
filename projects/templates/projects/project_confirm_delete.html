@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Delete project{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="{% url 'projects:list' %}">Projects</a><a href="{{ project.get_absolute_url }}">{{ project.code }}</a><span>Delete</span></nav>
+<form class="card narrow--sm" method="post">
+  <div class="card-body confirm">
+    {% csrf_token %}
+    <span class="ic-wrap"><svg class="ic"><use href="#i-trash"/></svg></span>
+    <h1 style="font-size:20px">Delete {{ project.name }}?</h1>
+    <p class="muted">This permanently removes the project and all of its tasks, milestones, progress updates and issues. You can't undo this.</p>
+    <div class="actions">
+      <button class="btn btn--danger" type="submit">Delete project</button>
+      <a class="btn btn--ghost" href="{{ project.get_absolute_url }}">Keep project</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

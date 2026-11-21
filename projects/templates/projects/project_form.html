@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Edit project{% else %}New project{% endif %}{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="{% url 'projects:list' %}">Projects</a>{% if is_edit %}<a href="{{ project.get_absolute_url }}">{{ project.code }}</a><span>Edit</span>{% else %}<span>New project</span>{% endif %}</nav>
+<header class="page-head">
+  <div><h1>{% if is_edit %}Edit project{% else %}New project{% endif %}</h1>
+  <p>{% if is_edit %}Update the details, dates and budget.{% else %}Set up the basics now. You can add the team, milestones and tasks afterwards.{% endif %}</p></div>
+</header>
+<form class="card narrow" method="post" novalidate>
+  <div class="card-body">
+    {% csrf_token %}
+    {% include "includes/form_fields.html" %}
+    <div class="form-actions">
+      <button class="btn btn--primary" type="submit">{% if is_edit %}Save changes{% else %}Create project{% endif %}</button>
+      <a class="btn btn--ghost" href="{% if is_edit %}{{ project.get_absolute_url }}{% else %}{% url 'projects:list' %}{% endif %}">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

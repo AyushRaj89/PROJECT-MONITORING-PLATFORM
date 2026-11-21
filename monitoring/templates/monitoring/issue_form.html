@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Edit issue{% else %}Report issue{% endif %}{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="{% url 'monitoring:issue_list' %}">Issues</a><a href="{{ project.get_absolute_url }}">{{ project.code }}</a><span>{% if is_edit %}Edit issue{% else %}New issue{% endif %}</span></nav>
+<header class="page-head"><div><h1>{% if is_edit %}Edit issue{% else %}Report an issue{% endif %}</h1><p>{% if is_edit %}Keep the status current so the team knows what is still open.{% else %}Describe what is wrong in {{ project.name }} so someone can pick it up.{% endif %}</p></div></header>
+<form class="card narrow" method="post" novalidate>
+  <div class="card-body">
+    {% csrf_token %}
+    {% include "includes/form_fields.html" %}
+    <div class="form-actions">
+      <button class="btn btn--primary" type="submit">{% if is_edit %}Save changes{% else %}Report issue{% endif %}</button>
+      <a class="btn btn--ghost" href="{% url 'monitoring:issue_list' %}">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

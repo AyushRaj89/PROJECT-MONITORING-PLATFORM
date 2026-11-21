@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}My tasks{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <h1>My tasks</h1>
+    <p>{{ open_count }} open{% if overdue_count %}, <b style="color:var(--red)">{{ overdue_count }} overdue</b>{% endif %}. {% if not is_viewer %}Drag a card to another column to change its status.{% endif %}</p>
+  </div>
+  <div class="actions"><a class="btn" href="{% url 'tasks:list' %}">All tasks</a></div>
+</header>
+
+{% if tasks %}
+<div class="board">
+  {% for col in columns %}
+  <section class="kcol" data-status="{{ col.key }}" style="--sw: var(--c-{{ col.key }})" aria-label="{{ col.label }}">
+    <h2 class="kcol-head">{{ col.label }}<span>{{ col.tasks|length }}</span></h2>
+    <div class="kcol-body">
+      {% for t in col.tasks %}
+      <article class="kcard" data-id="{{ t.pk }}" data-url="{% url 'tasks:set_status' t.pk %}" {% if not is_viewer %}draggable="true"{% endif %}>
+        <div class="row"><span class="code">{{ t.project.code }}</span><span class="badge b-{{ t.priority }}">{{ t.get_priority_display }}</span></div>
+        <a class="t" href="{{ t.get_absolute_url }}">{{ t.title }}</a>
+        <div class="row">
+          <span class="due{% if t.is_overdue %} is-late{% endif %}"><svg class="ic ic--sm" style="display:inline;vertical-align:-3px"><use href="#i-calendar"/></svg> {{ t.due_date|date:"j M"|default:"No date" }}</span>
+        </div>
+        {% if not is_viewer %}
+        <form method="post" action="{% url 'tasks:set_status' t.pk %}">
+          {% csrf_token %}
+          <label class="sr-only" for="st-{{ t.pk }}">Status of {{ t.title }}</label>
+          <select id="st-{{ t.pk }}" name="status" data-autosubmit>
+            {% for key, label in status_choices %}<option value="{{ key }}" {% if key == t.status %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+          <noscript><button class="btn btn--sm" type="submit">Update</button></noscript>
+        </form>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% else %}
+<section class="card"><div class="empty"><h3>Nothing assigned to you</h3><p>When a manager assigns you a task, it will show up here.</p><a class="btn" href="{% url 'projects:list' %}">Browse projects</a></div></section>
+{% endif %}
+{% endblock %}

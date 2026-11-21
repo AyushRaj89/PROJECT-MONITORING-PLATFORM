@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}All tasks{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div><h1>All tasks</h1><p>{{ page_obj.paginator.count }} task{{ page_obj.paginator.count|pluralize }} across your projects.</p></div>
+  <div class="actions"><a class="btn" href="{% url 'tasks:mine' %}"><svg class="ic ic--sm"><use href="#i-mine"/></svg>My board</a></div>
+</header>
+
+<form class="card filters" method="get">
+  <div class="search">
+    <svg class="ic"><use href="#i-search"/></svg>
+    <input type="search" name="q" value="{{ form.q.value|default:'' }}" placeholder="Search tasks" aria-label="Search tasks">
+  </div>
+  {{ form.project }}{{ form.status }}{{ form.priority }}{{ form.assignee }}
+  <label class="check">{{ form.overdue }} Overdue only</label>
+  <button class="btn" type="submit">Apply</button>
+  {% if request.GET %}<a class="btn btn--ghost" href="{% url 'tasks:list' %}">Clear</a>{% endif %}
+</form>
+
+<section class="card">
+  {% if tasks %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Task</th><th>Project</th><th>Assignee</th><th>Priority</th><th>Status</th><th>Due</th></tr></thead>
+      <tbody>
+      {% for t in tasks %}
+        <tr>
+          <td><a class="t-title" href="{{ t.get_absolute_url }}">{{ t.title }}</a>{% if t.milestone %}<br><small class="faint">{{ t.milestone.title }}</small>{% endif %}</td>
+          <td><a href="{{ t.project.get_absolute_url }}"><span class="code">{{ t.project.code }}</span></a></td>
+          <td>{% include "includes/person.html" with u=t.assignee %}</td>
+          <td><span class="badge b-{{ t.priority }}">{{ t.get_priority_display }}</span></td>
+          <td><span class="badge b-{{ t.status }}">{{ t.get_status_display }}</span></td>
+          <td><span class="due{% if t.is_overdue %} is-late{% endif %}">{{ t.due_date|date:"j M Y"|default:"-" }}</span></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "includes/pagination.html" %}
+  {% else %}
+  <div class="empty">
+    <h3>{% if request.GET %}No tasks match these filters{% else %}No tasks yet{% endif %}</h3>
+    <p>{% if request.GET %}Try a different search or clear the filters.{% else %}Open a project and add a task to get started.{% endif %}</p>
+    {% if not request.GET %}<a class="btn btn--primary" href="{% url 'projects:list' %}">Go to projects</a>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
